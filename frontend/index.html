@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>StreetSpot 📍 Discover Local. Support Local.</title>
+  
+  <!-- Tailwind CSS CDN for sleek mobile-first design -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#fffbeb',
+              100: '#fef3c7',
+              500: '#f59e0b',
+              600: '#d97706',
+              700: '#b45309'
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      background-color: #f1f5f9;
+      -webkit-tap-highlight-color: transparent;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+    .hide-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .hide-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
+</head>
+<body class="flex justify-center min-h-screen text-slate-800 antialiased selection:bg-amber-100 selection:text-amber-900">
+
+  <!-- Mobile Container Wrapper -->
+  <div class="w-full max-w-md bg-white min-h-screen flex flex-col shadow-2xl relative pb-20">
+
+    <!-- TOP HEADER -->
+    <header class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 px-4 py-3">
+      <div class="flex items-center justify-between">
+        <div>
+          <div class="flex items-center gap-1.5">
+            <span class="text-xl">📍</span>
+            <h1 class="text-xl font-black tracking-tight text-slate-900">Street<span class="text-amber-500">Spot</span></h1>
+          </div>
+          <p class="text-[11px] font-medium text-slate-500">Discover Local • Support Local</p>
+        </div>
+
+        <!-- Mode Toggle Pill -->
+        <div class="flex bg-slate-100 p-1 rounded-full border border-slate-200 text-xs font-semibold">
+          <button id="navCustomerBtn" onclick="switchTab('customer')" class="px-3 py-1.5 rounded-full bg-amber-500 text-white shadow-sm transition-all">
+            Customer
+          </button>
+          <button id="navVendorBtn" onclick="switchTab('vendor')" class="px-3 py-1.5 rounded-full text-slate-600 hover:text-slate-900 transition-all">
+            Vendor Portal
+          </button>
+        </div>
+      </div>
+
+      <!-- Current Location Sub-bar -->
+      <div class="mt-2.5 flex items-center justify-between text-xs bg-amber-50/80 border border-amber-200/60 rounded-xl px-3 py-2 text-amber-950">
+        <div class="flex items-center gap-1.5 truncate">
+          <i data-lucide="map-pin" class="w-3.5 h-3.5 text-amber-600 shrink-0"></i>
+          <span class="font-bold truncate" id="currentLocationLabel">Indiranagar Central, Bengaluru</span>
+        </div>
+        <button onclick="refreshNearbyStalls()" class="text-[11px] font-bold text-amber-700 hover:text-amber-900 flex items-center gap-1 shrink-0 ml-2">
+          <i data-lucide="refresh-cw" class="w-3 h-3"></i> Refresh
+        </button>
+      </div>
+    </header>
+
+    <!-- ========================================== -->
+    <!-- 1. CUSTOMER VIEW TAB                       -->
+    <!-- ========================================== -->
+    <main id="customerView" class="flex-1 px-4 py-3 space-y-4">
+
+      <!-- Radius Range Filter -->
+      <div class="flex items-center justify-between gap-1 overflow-x-auto hide-scrollbar py-0.5 text-xs">
+        <span class="text-slate-400 font-semibold text-[11px] shrink-0 mr-1">Radius:</span>
+        <button onclick="setRadius(500, this)" class="radius-btn px-2.5 py-1 rounded-lg border border-slate-200 bg-white text-slate-700 font-medium whitespace-nowrap hover:border-amber-400">500 m</button>
+        <button onclick="setRadius(1000, this)" class="radius-btn px-2.5 py-1 rounded-lg border border-slate-200 bg-white text-slate-700 font-medium whitespace-nowrap hover:border-amber-400">1 km</button>
+        <button onclick="setRadius(3000, this)" class="radius-btn px-2.5 py-1 rounded-lg border-amber-500 bg-amber-500 text-white font-bold whitespace-nowrap">3 km</button>
+        <button onclick="setRadius(5000, this)" class="radius-btn px-2.5 py-1 rounded-lg border border-slate-200 bg-white text-slate-700 font-medium whitespace-nowrap hover:border-amber-400">5 km</button>
+      </div>
+
+      <!-- Categories Pills Carousel -->
+      <div>
+        <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Explore Categories</h2>
+        <div class="flex items-center gap-2 overflow-x-auto hide-scrollbar pb-1">
+          <button onclick="filterCategory('all', this)" class="category-btn flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-slate-900 text-white shrink-0 shadow-sm">
+            <span>✨</span> All Stalls
+          </button>
+          <button onclick="filterCategory('street-food', this)" class="category-btn flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-slate-100 text-slate-700 hover:bg-slate-200 shrink-0">
+            <span>🍜</span> Street Food
+          </button>
+          <button onclick="filterCategory('fruits-veg', this)" class="category-btn flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-slate-100 text-slate-700 hover:bg-slate-200 shrink-0">
+            <span>🍎</span> Fruits & Veg
+          </button>
+          <button onclick="filterCategory('flowers', this)" class="category-btn flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-slate-100 text-slate-700 hover:bg-slate-200 shrink-0">
+            <span>🌸</span> Flowers
+          </button>
+          <button onclick="filterCategory('tea-juice', this)" class="category-btn flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-slate-100 text-slate-700 hover:bg-slate-200 shrink-0">
+            <span>🥤</span> Chai & Juice
+          </button>
+        </div>
+      </div>
+
+      <!-- Active Flash Offers Carousel -->
+      <div id="flashOffersContainer" class="space-y-2">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-1.5">
+            <span class="text-base">⚡</span>
+            <h2 class="text-sm font-black text-slate-900 tracking-tight">Today's Flash Deals</h2>
+          </div>
+          <span class="text-[10px] font-bold text-rose-700 uppercase bg-rose-50 border border-rose-200 px-2 py-0.5 rounded-md animate-pulse">Ending Soon</span>
+        </div>
+        
+        <div id="flashOffersList" class="space-y-2"></div>
+      </div>
+
+      <!-- Stalls Listing -->
+      <div class="space-y-3 pt-1">
+        <div class="flex items-center justify-between">
+          <h2 class="text-sm font-black text-slate-900">Nearby Street Stalls (<span id="stallsCount">0</span>)</h2>
+          <span class="text-[11px] text-slate-400 font-medium">Sorted by nearest GPS</span>
+        </div>
+
+        <div id="stallsList" class="space-y-3"></div>
+      </div>
+
+    </main>
+
+    <!-- ========================================== -->
+    <!-- 2. VENDOR DASHBOARD TAB                    -->
+    <!-- ========================================== -->
+    <main id="vendorView" class="hidden flex-1 px-4 py-3 space-y-5">
+      
+      <!-- Vendor Selector Switch -->
+      <div class="bg-amber-50 border border-amber-200 rounded-2xl p-3">
+        <label class="block text-xs font-bold text-amber-900 uppercase tracking-wider mb-1.5">Active Vendor Profile</label>
+        <select id="vendorSelect" onchange="onVendorSelectChange()" class="w-full bg-white border border-amber-300 rounded-xl px-3 py-2 text-sm font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-500">
+        </select>
+        <p class="text-[11px] text-amber-700 mt-1.5">Switching vendor lets you test vendor features for any cart!</p>
+      </div>
+
+      <!-- 1-Tap Real-time GPS Broadcast -->
+      <div class="bg-white border-2 border-slate-900 rounded-2xl p-4 shadow-sm space-y-3">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="text-xl">📍</span>
+            <div>
+              <h3 class="text-sm font-black text-slate-900">Live Stall Location</h3>
+              <p class="text-[11px] text-slate-500" id="vendorCurrentLandmark">Opposite Metro Gate 2</p>
+            </div>
+          </div>
+          <span id="vendorGpsCoords" class="text-[10px] font-mono bg-slate-100 text-slate-600 px-2 py-1 rounded-md">77.59, 12.97</span>
+        </div>
+
+        <button onclick="broadcastLiveGps()" class="w-full flex items-center justify-center gap-2 bg-slate-900 hover:bg-black text-white font-bold text-xs py-3 rounded-xl shadow-md active:scale-[0.98] transition-all">
+          <i data-lucide="navigation" class="w-4 h-4 text-amber-400"></i>
+          <span>1-Tap Update My Live GPS Location</span>
+        </button>
+        <p class="text-[10px] text-center text-slate-400">Grabs your device's exact location so customers can find your moved thela.</p>
+      </div>
+
+      <!-- Open / Closed Toggle -->
+      <div class="bg-white border border-slate-200 rounded-2xl p-4 flex items-center justify-between shadow-sm">
+        <div>
+          <h3 class="text-sm font-bold text-slate-900">Stall Operating Status</h3>
+          <p class="text-xs text-slate-500" id="vendorStatusText">Currently accepting customers</p>
+        </div>
+        <button id="vendorStatusToggleBtn" onclick="toggleStallStatus()" class="px-4 py-2 rounded-xl text-xs font-black bg-emerald-100 text-emerald-800 border border-emerald-300 transition-all">
+          🟢 OPEN NOW
+        </button>
+      </div>
+
+      <!-- Quick Flash Deal Creator -->
+      <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm space-y-3">
+        <div class="flex items-center gap-2">
+          <span class="text-lg">⚡</span>
+          <h3 class="text-sm font-black text-slate-900">Launch a Flash Clearance Deal</h3>
+        </div>
+        <p class="text-xs text-slate-500">Clear surplus stock by offering time-limited discounts to nearby customers!</p>
+
+        <form id="flashDealForm" onsubmit="handleCreateOffer(event)" class="space-y-2.5">
+          <div>
+            <label class="block text-[11px] font-bold text-slate-600 mb-1">Deal Title</label>
+            <input type="text" id="dealTitle" placeholder="e.g. 15% OFF all Chaat till 6 PM!" required class="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-amber-500">
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block text-[11px] font-bold text-slate-600 mb-1">Discount %</label>
+              <input type="number" id="dealPercent" min="5" max="90" value="15" required class="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-amber-500">
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold text-slate-600 mb-1">Duration (Hours)</label>
+              <select id="dealDuration" class="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-amber-500">
+                <option value="1">1 Hour</option>
+                <option value="2" selected>2 Hours</option>
+                <option value="4">4 Hours</option>
+              </select>
+            </div>
+          </div>
+          <button type="submit" class="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs py-2.5 rounded-xl shadow-sm">
+            🚀 Launch Flash Deal Now
+          </button>
+        </form>
+      </div>
+
+      <!-- WhatsApp Promotion Card -->
+      <div class="bg-gradient-to-br from-emerald-500 to-emerald-700 text-white rounded-2xl p-4 shadow-md space-y-3">
+        <div class="flex items-center gap-2">
+          <i data-lucide="share-2" class="w-5 h-5 text-white"></i>
+          <h3 class="text-sm font-black">WhatsApp Marketing Hub</h3>
+        </div>
+        <p class="text-xs text-emerald-100 leading-relaxed">
+          Share your stall flyer on WhatsApp with 1 tap. Friends & customers get your digital menu and live GPS pin!
+        </p>
+        <button onclick="shareActiveVendorOnWhatsApp()" class="w-full flex items-center justify-center gap-2 bg-white text-emerald-800 hover:bg-emerald-50 font-black text-xs py-2.5 rounded-xl shadow">
+          <span>📲 Share My Stall on WhatsApp</span>
+        </button>
+      </div>
+
+    </main>
+
+    <!-- ========================================== -->
+    <!-- 3. STALL MENU & DETAIL MODAL (Pop-up)      -->
+    <!-- ========================================== -->
+    <div id="stallModal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden flex items-end sm:items-center justify-center">
+      <div class="bg-white w-full max-w-md max-h-[88vh] rounded-t-3xl sm:rounded-2xl flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-200">
+        
+        <!-- Modal Header Image & Close -->
+        <div class="relative h-44 bg-slate-800 shrink-0">
+          <img id="modalBanner" src="" alt="Stall banner" class="w-full h-full object-cover">
+          <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent"></div>
+          
+          <button onclick="closeStallModal()" class="absolute top-3 right-3 bg-black/50 text-white p-1.5 rounded-full hover:bg-black/80">
+            <i data-lucide="x" class="w-4 h-4"></i>
+          </button>
+
+          <div class="absolute bottom-3 left-4 right-4 text-white">
+            <span id="modalCategoryBadge" class="text-[10px] font-bold uppercase bg-amber-500 text-slate-950 px-2 py-0.5 rounded-md">Street Food</span>
+            <h2 id="modalStallName" class="text-lg font-black leading-tight mt-1">Ravi's Pani Puri</h2>
+            <p id="modalLandmark" class="text-xs text-slate-200 flex items-center gap-1 mt-0.5">
+              <i data-lucide="map-pin" class="w-3 h-3 text-amber-400"></i> Opposite Metro Gate 2
+            </p>
+          </div>
+        </div>
+
+        <!-- Modal Body (Menu Items) -->
+        <div class="flex-1 overflow-y-auto px-4 py-3 space-y-3">
+          <div id="modalOfferBanner" class="hidden bg-rose-50 border border-rose-200 rounded-xl p-2.5 text-xs text-rose-900 flex items-center gap-2">
+            <span class="text-lg">⚡</span>
+            <div>
+              <span class="font-bold block" id="modalOfferTitle">10% OFF between 4 PM - 6 PM!</span>
+              <span class="text-[11px] text-rose-700">Tell the vendor at the stall to claim this offer!</span>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between">
+            <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Digital Menu (<span id="modalMenuCount">0</span> items)</h3>
+            <span class="text-[11px] text-slate-400">All prices in ₹ (INR)</span>
+          </div>
+
+          <div id="modalMenuItems" class="space-y-2"></div>
+        </div>
+
+        <!-- Modal Footer Actions -->
+        <div class="p-3 bg-slate-50 border-t border-slate-200 flex items-center gap-2">
+          <button id="modalWhatsAppChatBtn" class="flex-1 flex items-center justify-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-2.5 rounded-xl shadow-sm">
+            <i data-lucide="message-circle" class="w-4 h-4"></i>
+            <span>Chat on WhatsApp</span>
+          </button>
+          <button id="modalWhatsAppShareBtn" class="flex items-center justify-center gap-1.5 bg-slate-900 hover:bg-black text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-sm">
+            <i data-lucide="share-2" class="w-4 h-4"></i>
+            <span>Share</span>
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="fixed top-5 left-1/2 -translate-x-1/2 z-50 bg-slate-900 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-xl transition-all opacity-0 pointer-events-none transform -translate-y-2">
+      Toast notification
+    </div>
+
+  </div>
+
+  <!-- APPLICATION JAVASCRIPT LOGIC -->
+  <script>
+    // Automatically adapts to same origin or port 7000
+    const API_BASE = window.location.port === "7000" ? "" : "http://localhost:7000";
+
+    // State
+    let currentRadius = 3000;
+    let currentCategory = 'all';
+    let currentCoords = { lat: 12.9716, lng: 77.5946 };
+    let allVendors = [];
+    let currentSelectedVendorId = 'vend_01';
+
+    // Initialize App
+    document.addEventListener("DOMContentLoaded", () => {
+      lucide.createIcons();
+      loadNearbyStalls();
+      loadActiveOffers();
+      loadAllVendorsForDashboard();
+    });
+
+    // Tab Switching
+    function switchTab(tab) {
+      const customerView = document.getElementById("customerView");
+      const vendorView = document.getElementById("vendorView");
+      const navCustomerBtn = document.getElementById("navCustomerBtn");
+      const navVendorBtn = document.getElementById("navVendorBtn");
+
+      if (tab === "customer") {
+        customerView.classList.remove("hidden");
+        vendorView.classList.add("hidden");
+        navCustomerBtn.className = "px-3 py-1.5 rounded-full bg-amber-500 text-white shadow-sm transition-all";
+        navVendorBtn.className = "px-3 py-1.5 rounded-full text-slate-600 hover:text-slate-900 transition-all";
+        loadNearbyStalls();
+      } else {
+        customerView.classList.add("hidden");
+        vendorView.classList.remove("hidden");
+        navVendorBtn.className = "px-3 py-1.5 rounded-full bg-slate-900 text-white shadow-sm transition-all";
+        navCustomerBtn.className = "px-3 py-1.5 rounded-full text-slate-600 hover:text-slate-900 transition-all";
+        updateVendorDashboardUI();
+      }
+      lucide.createIcons();
+    }
+
+    // Set Radius Filter
+    function setRadius(meters, btn) {
+      currentRadius = meters;
+      document.querySelectorAll(".radius-btn").forEach(b => {
+        b.className = "radius-btn px-2.5 py-1 rounded-lg border border-slate-200 bg-white text-slate-700 font-medium whitespace-nowrap hover:border-amber-400";
+      });
+      btn.className = "radius-btn px-2.5 py-1 rounded-lg border-amber-500 bg-amber-500 text-white font-bold whitespace-nowrap";
+      loadNearbyStalls();
+    }
+
+    // Filter Category
+    function filterCategory(cat, btn) {
+      currentCategory = cat;
+      document.querySelectorAll(".category-btn").forEach(b => {
+        b.className = "category-btn flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-slate-100 text-slate-700 hover:bg-slate-200 shrink-0";
+      });
+      btn.className = "category-btn flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-slate-900 text-white shrink-0 shadow-sm";
+      loadNearbyStalls();
+    }
+
+    // Refresh Stalls
+    function refreshNearbyStalls() {
+      showToast("📍 Refreshing nearby stalls...");
+      loadNearbyStalls();
+      loadActiveOffers();
+    }
+
+    // Load Nearby Stalls from API
+    async function loadNearbyStalls() {
+      try {
+        const url = `${API_BASE}/api/vendors/nearby?lat=${currentCoords.lat}&lng=${currentCoords.lng}&radius=${currentRadius}&category=${currentCategory}`;
+        const res = await fetch(url);
+        const data = await res.json();
+
+        if (data.success) {
+          allVendors = data.vendors;
+          document.getElementById("stallsCount").innerText = data.count;
+          renderStalls(data.vendors);
+        }
+      } catch (err) {
+        console.error("Failed to fetch stalls:", err);
+      }
+    }
+
+    // Render Stalls in DOM
+    function renderStalls(stalls) {
+      const container = document.getElementById("stallsList");
+      if (!stalls || stalls.length === 0) {
+        container.innerHTML = `
+          <div class="text-center py-10 bg-slate-50 border border-dashed border-slate-300 rounded-2xl">
+            <span class="text-3xl">🔍</span>
+            <p class="text-xs font-bold text-slate-600 mt-2">No street stalls found in this radius.</p>
+            <p class="text-[11px] text-slate-400 mt-0.5">Try expanding the radius to 3 km or 5 km.</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = stalls.map(vendor => `
+        <div class="bg-white border border-slate-200/80 rounded-2xl p-3 shadow-sm hover:shadow-md transition-all flex flex-col gap-2.5">
+          <div class="flex gap-3">
+            <img src="${vendor.bannerImage}" alt="${vendor.businessName}" class="w-20 h-20 rounded-xl object-cover shrink-0 border border-slate-100">
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center justify-between gap-1">
+                <span class="text-[10px] font-bold uppercase tracking-wider text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded">
+                  ${formatCategory(vendor.category)}
+                </span>
+                <span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${vendor.isOpen ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-500'}">
+                  ${vendor.isOpen ? '● Open Now' : 'Closed'}
+                </span>
+              </div>
+              
+              <h3 class="text-sm font-black text-slate-900 truncate mt-1">${vendor.businessName}</h3>
+              <p class="text-[11px] text-slate-500 truncate">${vendor.addressLandmark}</p>
+              
+              <div class="flex items-center gap-2 mt-1 text-[11px]">
+                <span class="font-bold text-slate-800 flex items-center gap-0.5">
+                  <i data-lucide="navigation" class="w-3 h-3 text-amber-500 fill-amber-500"></i> ${vendor.distanceText}
+                </span>
+                <span class="text-slate-300">•</span>
+                <span class="text-amber-600 font-bold">⭐ ${vendor.rating}</span>
+                <span class="text-slate-400 text-[10px]">(${vendor.reviewCount})</span>
+              </div>
+            </div>
+          </div>
+
+          ${vendor.activeOffer ? `
+            <div class="bg-gradient-to-r from-rose-50 to-amber-50 border border-rose-200 rounded-xl px-2.5 py-1.5 text-xs text-rose-900 flex items-center justify-between">
+              <span class="font-bold text-[11px] truncate">🔥 ${vendor.activeOffer.title}</span>
+              <span class="text-[10px] font-black bg-rose-500 text-white px-1.5 py-0.5 rounded-md ml-1 shrink-0">${vendor.activeOffer.discountPercentage}% OFF</span>
+            </div>
+          ` : ''}
+
+          <div class="flex items-center gap-2 pt-1 border-t border-slate-100">
+            <button onclick="openStallModal('${vendor.id}')" class="flex-1 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs py-2 rounded-xl text-center shadow-sm transition-all">
+              View Menu & Prices
+            </button>
+            <button onclick="shareStallWhatsApp('${vendor.id}')" title="Share on WhatsApp" class="p-2 border border-slate-200 hover:bg-emerald-50 rounded-xl text-emerald-600 transition-all">
+              <i data-lucide="share-2" class="w-4 h-4"></i>
+            </button>
+            <a href="https://www.google.com/maps/dir/?api=1&destination=${vendor.location.coordinates[1]},${vendor.location.coordinates[0]}" target="_blank" title="Directions" class="p-2 border border-slate-200 hover:bg-slate-50 rounded-xl text-slate-600 transition-all">
+              <i data-lucide="map-pin" class="w-4 h-4"></i>
+            </a>
+          </div>
+        </div>
+      `).join("");
+
+      lucide.createIcons();
+    }
+
+    // Load Active Flash Offers
+    async function loadActiveOffers() {
+      try {
+        const res = await fetch(`${API_BASE}/api/offers/active`);
+        const data = await res.json();
+        const container = document.getElementById("flashOffersList");
+
+        if (!data.offers || data.offers.length === 0) {
+          document.getElementById("flashOffersContainer").classList.add("hidden");
+          return;
+        }
+
+        document.getElementById("flashOffersContainer").classList.remove("hidden");
+        container.innerHTML = data.offers.map(offer => `
+          <div class="bg-gradient-to-r from-amber-500 to-rose-500 text-white rounded-2xl p-3 shadow-md flex items-center justify-between gap-3">
+            <div class="min-w-0">
+              <div class="flex items-center gap-1.5">
+                <span class="bg-black/30 text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full text-amber-200">${offer.discountPercentage}% OFF</span>
+                <span class="text-[11px] font-bold text-white/90 truncate">${offer.vendorName}</span>
+              </div>
+              <h4 class="text-xs font-black text-white mt-1 truncate">${offer.title}</h4>
+              <p class="text-[10px] text-white/80 truncate">${offer.description}</p>
+            </div>
+            <button onclick="openStallModal('${offer.vendorId}')" class="bg-white text-slate-900 font-bold text-xs px-3 py-2 rounded-xl shrink-0 shadow hover:bg-amber-100">
+              Claim
+            </button>
+          </div>
+        `).join("");
+      } catch (err) {
+        console.error("Failed to load offers:", err);
+      }
+    }
+
+    // Open Stall Details & Menu Modal
+    async function openStallModal(vendorId) {
+      try {
+        const res = await fetch(`${API_BASE}/api/vendors/${vendorId}`);
+        const data = await res.json();
+        if (!data.success) return;
+
+        const v = data.vendor;
+        document.getElementById("modalBanner").src = v.bannerImage;
+        document.getElementById("modalStallName").innerText = v.businessName;
+        document.getElementById("modalLandmark").innerHTML = `<i data-lucide="map-pin" class="w-3 h-3 text-amber-400"></i> ${v.addressLandmark}`;
+        document.getElementById("modalCategoryBadge").innerText = formatCategory(v.category);
+        document.getElementById("modalMenuCount").innerText = data.menu.length;
+
+        const offerBanner = document.getElementById("modalOfferBanner");
+        if (data.offers && data.offers.length > 0) {
+          offerBanner.classList.remove("hidden");
+          document.getElementById("modalOfferTitle").innerText = data.offers[0].title;
+        } else {
+          offerBanner.classList.add("hidden");
+        }
+
+        const menuContainer = document.getElementById("modalMenuItems");
+        menuContainer.innerHTML = data.menu.map(item => `
+          <div class="flex items-center justify-between p-2.5 bg-slate-50 border border-slate-200/80 rounded-xl gap-2">
+            <div class="flex items-center gap-2.5 min-w-0">
+              <span class="w-2.5 h-2.5 rounded-full ${item.isVegetarian ? 'bg-emerald-500' : 'bg-rose-500'} shrink-0" title="${item.isVegetarian ? 'Veg' : 'Non-Veg'}"></span>
+              <div class="min-w-0">
+                <h4 class="text-xs font-bold text-slate-900 truncate">${item.name}</h4>
+                <p class="text-[10px] text-slate-500 truncate">${item.description}</p>
+              </div>
+            </div>
+            <div class="text-right shrink-0">
+              <span class="text-xs font-black text-slate-900">₹${item.price}</span>
+            </div>
+          </div>
+        `).join("");
+
+        document.getElementById("modalWhatsAppChatBtn").onclick = () => {
+          window.open(data.whatsapp.directChatUrl, "_blank");
+        };
+        document.getElementById("modalWhatsAppShareBtn").onclick = () => {
+          window.open(data.whatsapp.viralShareUrl, "_blank");
+        };
+
+        document.getElementById("stallModal").classList.remove("hidden");
+        lucide.createIcons();
+      } catch (err) {
+        console.error("Error loading modal:", err);
+      }
+    }
+
+    function closeStallModal() {
+      document.getElementById("stallModal").classList.add("hidden");
+    }
+
+    // Share Stall via WhatsApp
+    async function shareStallWhatsApp(vendorId) {
+      try {
+        const res = await fetch(`${API_BASE}/api/vendors/${vendorId}/whatsapp-share`);
+        const data = await res.json();
+        if (data.viralShareUrl) {
+          window.open(data.viralShareUrl, "_blank");
+        }
+      } catch (err) {
+        console.error("Error sharing stall:", err);
+      }
+    }
+
+    // ==========================================
+    // VENDOR PORTAL LOGIC
+    // ==========================================
+    async function loadAllVendorsForDashboard() {
+      try {
+        const res = await fetch(`${API_BASE}/api/vendors`);
+        const data = await res.json();
+        const select = document.getElementById("vendorSelect");
+        
+        select.innerHTML = data.vendors.map(v => `
+          <option value="${v.id}">${v.businessName} (${formatCategory(v.category)})</option>
+        `).join("");
+
+        currentSelectedVendorId = data.vendors[0]?.id || "vend_01";
+        updateVendorDashboardUI();
+      } catch (err) {
+        console.error("Failed to load vendors for dashboard:", err);
+      }
+    }
+
+    function onVendorSelectChange() {
+      currentSelectedVendorId = document.getElementById("vendorSelect").value;
+      updateVendorDashboardUI();
+    }
+
+    async function updateVendorDashboardUI() {
+      try {
+        const res = await fetch(`${API_BASE}/api/vendors/${currentSelectedVendorId}`);
+        const data = await res.json();
+        if (!data.success) return;
+
+        const v = data.vendor;
+        document.getElementById("vendorCurrentLandmark").innerText = v.addressLandmark;
+        document.getElementById("vendorGpsCoords").innerText = `${v.location.coordinates[0].toFixed(4)}, ${v.location.coordinates[1].toFixed(4)}`;
+        
+        const statusBtn = document.getElementById("vendorStatusToggleBtn");
+        const statusText = document.getElementById("vendorStatusText");
+        
+        if (v.isOpen) {
+          statusBtn.innerText = "🟢 OPEN NOW";
+          statusBtn.className = "px-4 py-2 rounded-xl text-xs font-black bg-emerald-100 text-emerald-800 border border-emerald-300";
+          statusText.innerText = "Currently accepting customers";
+        } else {
+          statusBtn.innerText = "🔴 CLOSED";
+          statusBtn.className = "px-4 py-2 rounded-xl text-xs font-black bg-rose-100 text-rose-800 border border-rose-300";
+          statusText.innerText = "Stall is marked closed";
+        }
+      } catch (err) {
+        console.error("Failed to update vendor dashboard:", err);
+      }
+    }
+
+    // 1-Tap Live GPS Broadcast
+    async function broadcastLiveGps() {
+      showToast("📡 Acquiring device GPS...");
+      
+      if ("geolocation" in navigator) {
+        navigator.geolocation.getCurrentPosition(
+          async (pos) => {
+            await sendLocationUpdate(pos.coords.latitude, pos.coords.longitude);
+          },
+          async () => {
+            const offsetLat = currentCoords.lat + (Math.random() - 0.5) * 0.002;
+            const offsetLng = currentCoords.lng + (Math.random() - 0.5) * 0.002;
+            await sendLocationUpdate(offsetLat, offsetLng);
+          }
+        );
+      } else {
+        const offsetLat = currentCoords.lat + 0.001;
+        const offsetLng = currentCoords.lng + 0.001;
+        await sendLocationUpdate(offsetLat, offsetLng);
+      }
+    }
+
+    async function sendLocationUpdate(lat, lng) {
+      try {
+        const res = await fetch(`${API_BASE}/api/vendors/${currentSelectedVendorId}/location`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            latitude: lat,
+            longitude: lng,
+            addressLandmark: "Updated Live Spot (Opposite Metro Exit Gate 1)"
+          })
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast(`📍 Live Location Broadcasted!`);
+          updateVendorDashboardUI();
+        }
+      } catch (err) {
+        console.error("Error updating location:", err);
+      }
+    }
+
+    // Toggle Stall Open / Closed
+    async function toggleStallStatus() {
+      try {
+        const res = await fetch(`${API_BASE}/api/vendors/${currentSelectedVendorId}/status`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({})
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast(`Stall status updated: ${data.isOpen ? 'OPEN' : 'CLOSED'}`);
+          updateVendorDashboardUI();
+        }
+      } catch (err) {
+        console.error("Failed to toggle status:", err);
+      }
+    }
+
+    // Create Flash Offer
+    async function handleCreateOffer(e) {
+      e.preventDefault();
+      const title = document.getElementById("dealTitle").value;
+      const discountPercentage = document.getElementById("dealPercent").value;
+      const durationHours = document.getElementById("dealDuration").value;
+
+      try {
+        const res = await fetch(`${API_BASE}/api/offers`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            vendorId: currentSelectedVendorId,
+            title,
+            discountPercentage,
+            durationHours
+          })
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast(`🎉 Flash deal launched!`);
+          document.getElementById("dealTitle").value = "";
+          loadActiveOffers();
+        }
+      } catch (err) {
+        console.error("Failed to create offer:", err);
+      }
+    }
+
+    // Share Active Vendor on WhatsApp
+    async function shareActiveVendorOnWhatsApp() {
+      shareStallWhatsApp(currentSelectedVendorId);
+    }
+
+    // Utilities
+    function formatCategory(cat) {
+      switch(cat) {
+        case 'street-food': return 'Street Food';
+        case 'fruits-veg': return 'Fruits & Veg';
+        case 'flowers': return 'Flowers';
+        case 'tea-juice': return 'Chai & Juice';
+        default: return 'Local Goods';
+      }
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById("toast");
+      toast.innerText = msg;
+      toast.classList.remove("opacity-0", "pointer-events-none", "-translate-y-2");
+      toast.classList.add("opacity-100", "translate-y-0");
+      setTimeout(() => {
+        toast.classList.add("opacity-0", "pointer-events-none", "-translate-y-2");
+        toast.classList.remove("opacity-100", "translate-y-0");
+      }, 3000);
+    }
+  </script>
+</body>
+</html>
+

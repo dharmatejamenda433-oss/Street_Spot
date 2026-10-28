@@ -1,0 +1,9 @@
+{
+  "name": "streetspot-frontend",
+  "version": "1.0.0",
+  "description": "Frontend Mobile Web Client for StreetSpot",
+  "scripts": {
+    "start": "npx serve -l 3000 ."
+  }
+}
+
